@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  console:
+    build:
+        context: .
+        dockerfile: AddSubScaling/Dockerfile
+    depends_on:
+     - add-service
+     - sub-service
+  add-service:
+    build:
+        context: .
+        dockerfile: AddService/Dockerfile
+    deploy:
+        replicas: 3
+  sub-service:
+    build:
+        context: .
+        dockerfile: SubService/Dockerfile
+    deploy:
+        replicas: 3
+    
+    
+
+
