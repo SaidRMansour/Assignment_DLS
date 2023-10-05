@@ -9,109 +9,100 @@ namespace UI.Controllers;
 
 public class CalculatorController : Controller
 {
-    private static RestClient restClient = new RestClient("http://add-service/Add");
-    //private static RestClient restClientSub = new RestClient("http://sub-service/Sub");
+    private readonly IHttpClientFactory _clientFactory;
 
-    private static readonly AsyncRetryPolicy retryPolicy = Policy
-        .Handle<Exception>()
-        .RetryAsync(3, (exception, retryCount) =>
-        {
-            Console.WriteLine($"Retry {retryCount} due to {exception.Message}");
-        });
-
+    public CalculatorController(IHttpClientFactory clientFactory)
+    {
+        _clientFactory = clientFactory;
+    }
     [HttpGet]
     public IActionResult Index()
     {
-        return View(new CalculationModel());
+        return View();
     }
 
     [HttpPost]
-    public IActionResult Calculate(CalculationModel model, string operation)
+    public async Task<IActionResult> Calculate(string numberInput, string operation)
     {
-        string[] numbersArray = model.Numbers.Split(',');
-        List<int> numbersList = new List<int>();
-        foreach (string numberString in numbersArray)
+        List<int> numbers;
+        try
         {
-            if (int.TryParse(numberString, out int number))
-            {
-                numbersList.Add(number);
-            }
-            else
-            {
-                return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-            }
+            numbers = numberInput.Split(',').Select(int.Parse).ToList();
+        }
+        catch (FormatException)
+        {
+            ViewBag.Error = "Invalid number format.";
+            return View("Index");
         }
 
-        if (operation == "add")
+        var client = _clientFactory.CreateClient();
+        var queryString = string.Join("&input=", numbers.Prepend(0));
+
+        string result = "";
+        if (operation == "Add")
         {
-            model.Result = FetchAdd(numbersList);
+            result = await client.GetStringAsync($"http://adding-service/Add?{queryString}");
         }
-        //else if (operation == "subtract")
-        //{
-        //    model.Result = FetchSub(numbersList);
-        //}
-
-        // Save operation in history if needed
-
-        return View("Index", model);
-    }
-   
-
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-    }
-
-    private static int FetchAdd(List<int> input)
-    {
-        string test = "1";
-        var task = restClient.GetAsync<int>(new RestRequest("/add?input="+test));
-
-        Console.WriteLine(task.Status);
-        Console.WriteLine(task.Status);
+        else if (operation == "Subtract")
         {
-            if (task?.Status == TaskStatus.WaitingForActivation)
-            {
-                var stringTask = task.Result;
-
-                try
-                {
-                    var addNumber = Convert.ToInt32(stringTask);
-                    return addNumber;
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine($"Unable to convert {stringTask} to int");
-                }
-
-            }
-            return 0;
+            result = await client.GetStringAsync($"http://subing-service/Sub?{queryString}");
         }
-        
+        else
+        {
+            ViewBag.Error = "Invalid operation.";
+            return View("Index");
+        }
 
+        ViewBag.Result = result;
+        return View("Index");
     }
-    //private static int FetchSub(List<int> input)
+    //[HttpPost]
+    //public async Task<IActionResult> Add(string numberInput)
     //{
-
-    //    var task = restClientSub.GetAsync<int>(new RestRequest("?input=" + input));
-
-    //    if (task?.Status == TaskStatus.RanToCompletion)
+    //    List<int> numbers;
+    //    try
     //    {
-    //        var stringTask = task.Result;
-
-    //        try
-    //        {
-    //            var subNumber = Convert.ToInt32(stringTask);
-    //            return subNumber;
-    //        }
-    //        catch (Exception)
-    //        {
-    //            Console.WriteLine($"Unable to convert {stringTask} to int");
-    //        }
-
+    //        numbers = numberInput.Split(',').Select(int.Parse).ToList();
     //    }
-    //    return 0;
+    //    catch (FormatException)
+    //    {
+    //        ViewBag.Error = "Invalid number format.";
+    //        return View("Index");
+    //    }
 
+    //    var client = _clientFactory.CreateClient();
+
+    //    // Konverter listen af tal til en streng, der kan inkluderes i en URL som forespørgselsparametre
+    //    var queryString = string.Join("&input=", numbers.Prepend(0)); // Bruger Prepend(0) som en hurtig måde at tilføje et element først i listen og anvende samme formattering gennem Join.
+
+    //    var result = await client.GetStringAsync($"http://adding-service/Add?{queryString}");
+
+    //    ViewBag.Result = result;
+    //    return View("Index");
+    //}
+
+    //[HttpPost]
+    //public async Task<IActionResult> Sub(string numberInput)
+    //{
+    //    List<int> numbers;
+    //    try
+    //    {
+    //        numbers = numberInput.Split(',').Select(int.Parse).ToList();
+    //    }
+    //    catch (FormatException)
+    //    {
+    //        ViewBag.Error = "Invalid number format.";
+    //        return View("Index");
+    //    }
+
+    //    var client = _clientFactory.CreateClient();
+
+    //    // Konverter listen af tal til en streng, der kan inkluderes i en URL som forespørgselsparametre
+    //    var queryString = string.Join("&input=", numbers.Prepend(0)); // Bruger Prepend(0) som en hurtig måde at tilføje et element først i listen og anvende samme formattering gennem Join.
+
+    //    var result = await client.GetStringAsync($"http://subing-service/Sub?{queryString}");
+
+    //    ViewBag.Result = result;
+    //    return View("Index");
     //}
 }

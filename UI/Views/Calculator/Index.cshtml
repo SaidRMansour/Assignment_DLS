@@ -1,23 +1,21 @@
-﻿@model CalculationModel
-
-@using (Html.BeginForm("Calculate", "Calculator"))
-{
-
-    <div>
-        @Html.LabelFor(model => model.Numbers)
-        @Html.TextBoxFor(model => model.Numbers, new { placeholder = "Enter numbers comma separated" })
-    </div>
-
-    <div>
-        <input type="submit" name="operation" value="add" />
-        <input type="submit" name="operation" value="subtract" />
-    </div>
-
-    @if (Model != null && Model.Result != 0)
-    {
-        <div>
-            Result: @Model.Result
-        </div>
-    }
+﻿@{
+    ViewBag.Title = "Index";
 }
 
+<h2>Calculator</h2>
+
+<form method="post" action="@Url.Action("Calculate")">
+    <input type="text" name="numberInput" placeholder="Enter numbers, e.g., 1,2,3" />
+    <input type="submit" name="operation" value="Add" />
+    <input type="submit" name="operation" value="Subtract" />
+</form>
+
+@if (ViewBag.Error != null)
+{
+    <p>@ViewBag.Error</p>
+}
+
+@if (ViewBag.Result != null)
+{
+    <p>Result: @ViewBag.Result</p>
+}

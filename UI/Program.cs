@@ -1,25 +1,11 @@
 ﻿var builder = WebApplication.CreateBuilder(args);
 
-//// Register HttpClient services
-//builder.Services.AddHttpClient();
-//builder.Services.AddHttpClient("AddServiceClient", c =>
-//{
-//    c.BaseAddress = new Uri("http://add-service");
-//    // Other configurations
-//});
-//builder.Services.AddHttpClient("SubServiceClient", c =>
-//{
-//    c.BaseAddress = new Uri("http://sub-service");
-//    // Other configurations
-//});
+builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient();
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-
-
-
-// Add controllers and views if not already added
-//builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
