@@ -1,11 +1,17 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+﻿using Polly;
 
-builder.Services.AddControllersWithViews();
-builder.Services.AddHttpClient();
+var builder = WebApplication.CreateBuilder(args);
+
+//builder.Services.AddHttpClient();
 
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Add HttpClient with Polly retry policy
+builder.Services.AddHttpClient("MyClient")
+    .AddTransientHttpErrorPolicy(p =>
+        p.WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(600)));
 
 var app = builder.Build();
 

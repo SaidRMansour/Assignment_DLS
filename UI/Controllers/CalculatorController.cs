@@ -35,7 +35,7 @@ public class CalculatorController : Controller
             return View("Index");
         }
 
-        var client = _clientFactory.CreateClient();
+        var client = _clientFactory.CreateClient("MyClient");
         var queryString = string.Join("&input=", numbers.Prepend(0));
 
         string result = "";
