@@ -1,0 +1,23 @@
+﻿@model CalculationModel
+
+@using (Html.BeginForm("Calculate", "Calculator"))
+{
+
+    <div>
+        @Html.LabelFor(model => model.Numbers)
+        @Html.TextBoxFor(model => model.Numbers, new { placeholder = "Enter numbers comma separated" })
+    </div>
+
+    <div>
+        <input type="submit" name="operation" value="add" />
+        <input type="submit" name="operation" value="subtract" />
+    </div>
+
+    @if (Model != null && Model.Result != 0)
+    {
+        <div>
+            Result: @Model.Result
+        </div>
+    }
+}
+

@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubService", "SubService\Su
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AddSubScaling", "AddSubScaling\AddSubScaling.csproj", "{970E4A33-22D4-43B5-95C0-59A9DF1B1A65}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monitoring", "Monitoring\Monitoring.csproj", "{A89A96E0-44E1-4F6C-82D4-7741C5B7C86A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UI", "UI\UI.csproj", "{F6B955F9-7F9F-4CFE-9D6B-C6816DDA6CA1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{970E4A33-22D4-43B5-95C0-59A9DF1B1A65}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{970E4A33-22D4-43B5-95C0-59A9DF1B1A65}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{970E4A33-22D4-43B5-95C0-59A9DF1B1A65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A89A96E0-44E1-4F6C-82D4-7741C5B7C86A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A89A96E0-44E1-4F6C-82D4-7741C5B7C86A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A89A96E0-44E1-4F6C-82D4-7741C5B7C86A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A89A96E0-44E1-4F6C-82D4-7741C5B7C86A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6B955F9-7F9F-4CFE-9D6B-C6816DDA6CA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6B955F9-7F9F-4CFE-9D6B-C6816DDA6CA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6B955F9-7F9F-4CFE-9D6B-C6816DDA6CA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6B955F9-7F9F-4CFE-9D6B-C6816DDA6CA1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

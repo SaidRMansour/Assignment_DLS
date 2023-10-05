@@ -1,26 +1,38 @@
 version: "3.9"
 
 services:
-  console:
+  web-ui:
     build:
-        context: .
-        dockerfile: AddSubScaling/Dockerfile
+      context: .
+      dockerfile: UI/Dockerfile
     depends_on:
-     - add-service
-     - sub-service
+      - add-service
+      - sub-service
+    restart: on-failure
   add-service:
     build:
         context: .
         dockerfile: AddService/Dockerfile
-    deploy:
-        replicas: 3
+    
+    restart: on-failure
   sub-service:
     build:
         context: .
         dockerfile: SubService/Dockerfile
-    deploy:
-        replicas: 3
-    
+   
+    restart: on-failure
+  seq:
+    image: datalust/seq
+    ports:
+     - 5341:5341
+     - 5342:80
+    volumes:
+     - rps_seq_data1:/data
+    environment:
+     - ACCEPT_EULA=Y
+     
+volumes:
+ rps_seq_data1:
     
 
 
