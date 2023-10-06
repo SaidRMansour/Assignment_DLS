@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Polly;
 using Polly.Retry;
 using RestSharp;
+using Serilog;
 using UI.Models;
 
 namespace UI.Controllers;
@@ -16,8 +18,12 @@ public class CalculatorController : Controller
         _clientFactory = clientFactory;
     }
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
+        var client = _clientFactory.CreateClient("MyClient");
+
+        var results = await client.GetStringAsync($"http://adding-service/Add");
+
         return View();
     }
 
@@ -41,6 +47,8 @@ public class CalculatorController : Controller
         string result = "";
         if (operation == "Add")
         {
+            // Testing an empty List (For logging)
+            // var temp = new List<int>();
             result = await client.GetStringAsync($"http://adding-service/Add?{queryString}");
         }
         else if (operation == "Subtract")

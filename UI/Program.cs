@@ -1,37 +1,46 @@
-﻿using Polly;
+﻿using Monitoring;
+using OpenTelemetry.Trace;
+using Polly;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
 
-//builder.Services.AddHttpClient();
-
-
-// Add services to the container.
-builder.Services.AddControllersWithViews();
-
-// Add HttpClient with Polly retry policy
-builder.Services.AddHttpClient("MyClient")
-    .AddTransientHttpErrorPolicy(p =>
-        p.WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(600)));
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+try
 {
-    app.UseExceptionHandler("/Calculator/Error");
+    var builder = WebApplication.CreateBuilder(args);
+
+
+    // Add services to the container.
+    builder.Services.AddControllersWithViews();
+
+    // Add HttpClient with Polly retry policy
+    builder.Services.AddHttpClient("MyClient")
+        .AddTransientHttpErrorPolicy(p =>
+            p.WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(600)));
+
+    var app = builder.Build();
+
+    // Configure the HTTP request pipeline.
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseExceptionHandler("/Calculator/Error");
+    }
+    app.UseStaticFiles();
+
+    app.UseRouting();
+
+    app.UseAuthorization();
+
+
+
+    app.MapControllerRoute(
+        name: "default",
+        pattern: "{controller=Calculator}/{action=Index}/{id?}");
+
+    app.Run();
+
 }
-app.UseStaticFiles();
-
-app.UseRouting();
-
-app.UseAuthorization();
-
-
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Calculator}/{action=Index}/{id?}");
-
-app.Run();
-
-
+finally
+{
+    Log.CloseAndFlush();
+    MonitorService.TracerProvider.ForceFlush();
+}

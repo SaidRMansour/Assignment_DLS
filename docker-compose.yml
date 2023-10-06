@@ -7,6 +7,8 @@ services:
     depends_on:
       - adding-service
       - subing-service
+      - seq
+      - zipkin
     ports:
       - "8000:80"
     restart: on-failure
@@ -18,6 +20,8 @@ services:
     deploy:
         replicas: 3
     restart: on-failure
+    depends_on:
+      - add-db
     
   subing-service:
     build:
@@ -26,7 +30,24 @@ services:
     deploy:
         replicas: 3
     restart: on-failure
+    depends_on:
+      - sub-db
     
+  add-db:
+    image: "mysql"
+    environment:
+      MYSQL_DATABASE: "add-database"
+      MYSQL_USER: "addDB"
+      MYSQL_PASSWORD: "S@adb912"
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+  sub-db:
+    image: "mysql"
+    environment:
+      MYSQL_DATABASE: "sub-database"
+      MYSQL_USER: "subDB"
+      MYSQL_PASSWORD: "S@sdb912"
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      
   seq:
     image: datalust/seq
     ports:
@@ -36,9 +57,30 @@ services:
      - rps_seq_data1:/data
     environment:
      - ACCEPT_EULA=Y
-     
+
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - 9411:9411
+    environment:
+      - STORAGE_TYPE=mysql
+      - MYSQL_HOST=zipkin-storage
+      - MYSQL_USER=zipkin
+      - MYSQL_PASS=zipkin
+    depends_on:
+      - zipkin-storage
+      
+      
+  zipkin-storage:
+    image: openzipkin/zipkin-mysql
+    ports:
+      - 3306:3306
+    volumes:
+      - zipkin_data:/mysql/data
+      
 volumes:
  rps_seq_data1:
+ zipkin_data:
     
 
 

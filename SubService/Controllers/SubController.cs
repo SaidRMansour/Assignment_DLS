@@ -10,24 +10,29 @@ public class SubController : ControllerBase
     [HttpGet]
     public int Get([FromQuery] List<int> input)
     {
-        //MonitorService.Log.Verbose("Entered Sub method");
-
-        if (input == null || !input.Any())
+        using (var activity = MonitorService.ActivitySource.StartActivity())
         {
-            //MonitorService.Log.Error("Sub will not work - invalid input");
-            BadRequest("Invalid input");
-            return 0;
-        }
+            MonitorService.Log.Here().Verbose("Entered Sub method with {Input}", input);
 
-        Console.WriteLine(Environment.MachineName);
-        var result = input[0];
-        for (int i = 1; i < input.Count; i++)
-        {
-            result -= input[i];
-        }
+            if (input == null || !input.Any())
+            {
+                MonitorService.Log.Here().Error("Invalid input - List empty or is null");
+                BadRequest("Invalid input");
+                return 0;
+            }
 
-        return result;
+            Console.WriteLine(Environment.MachineName);
+            var result = input[0];
+            for (int i = 1; i < input.Count; i++)
+            {
+                result -= input[i];
+            }
+            MonitorService.Log.Here().Debug("Sub method calculated this result: {Result}", result);
+            return result;
+        }
+       
     }
+
 
 }
 
