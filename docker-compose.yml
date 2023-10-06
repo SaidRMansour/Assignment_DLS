@@ -20,8 +20,7 @@ services:
     deploy:
         replicas: 3
     restart: on-failure
-    depends_on:
-      - add-db
+   
     
   subing-service:
     build:
@@ -30,23 +29,8 @@ services:
     deploy:
         replicas: 3
     restart: on-failure
-    depends_on:
-      - sub-db
     
-  add-db:
-    image: "mysql"
-    environment:
-      MYSQL_DATABASE: "add-database"
-      MYSQL_USER: "addDB"
-      MYSQL_PASSWORD: "S@adb912"
-      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
-  sub-db:
-    image: "mysql"
-    environment:
-      MYSQL_DATABASE: "sub-database"
-      MYSQL_USER: "subDB"
-      MYSQL_PASSWORD: "S@sdb912"
-      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+  
       
   seq:
     image: datalust/seq

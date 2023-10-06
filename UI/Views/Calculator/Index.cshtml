@@ -20,13 +20,13 @@
     <p>Result: @ViewBag.Result</p>
 }
 
-@if (ViewBag.OperationResults != null)
+@if (ViewBag.Operations != null)
 {
     <h3>Past Operations:</h3>
     <select size="5" style="width:300px;">
-        @foreach (var item in ViewBag.OperationResults)
+        @foreach (var item in ViewBag.Operations)
         {
-            <option>@item.NumberOfList, @item.Operation, @item.Result</option>
+            <option>@item.Item1, @item.Item2, @item.Item3</option>
         }
     </select>
 }

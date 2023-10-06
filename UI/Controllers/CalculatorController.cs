@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Polly;
 using Polly.Retry;
 using RestSharp;
@@ -18,12 +19,9 @@ public class CalculatorController : Controller
         _clientFactory = clientFactory;
     }
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public IActionResult Index()
     {
-        var client = _clientFactory.CreateClient("MyClient");
-
-        var results = await client.GetStringAsync($"http://adding-service/Add");
-
+    
         return View();
     }
 
