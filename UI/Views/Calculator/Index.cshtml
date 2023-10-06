@@ -19,14 +19,12 @@
 {
     <p>Result: @ViewBag.Result</p>
 }
+<br /><br />
 
-@if (ViewBag.Operations != null)
+@if (ViewBag.ResultData != null)
 {
-    <h3>Past Operations:</h3>
-    <select size="5" style="width:300px;">
-        @foreach (var item in ViewBag.Operations)
-        {
-            <option>@item.Item1, @item.Item2, @item.Item3</option>
-        }
-    </select>
+    <h3>Result Data:</h3>
+    <textarea rows="4" cols="50">
+       @ViewBag.ResultData
+    </textarea>
 }

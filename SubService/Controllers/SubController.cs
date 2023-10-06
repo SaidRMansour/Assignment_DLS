@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FireSharp.Config;
+using FireSharp.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 using Monitoring;
 
 namespace SubService.Controllers;
@@ -7,9 +9,21 @@ namespace SubService.Controllers;
 [Route("[controller]")]
 public class SubController : ControllerBase
 {
+    private static readonly string authSecret = "6WQRS3cA7lh67gJ9uacEX5e3Hnf9Rd9aEQ1QjsYm";
+    private static readonly string basePath = "https://dls-assignment-efd5b-default-rtdb.europe-west1.firebasedatabase.app";
+
+    IFirebaseClient client;
+    IFirebaseConfig config = new FirebaseConfig
+    {
+        AuthSecret = authSecret,
+        BasePath = basePath
+    };
+
     [HttpGet]
     public int Get([FromQuery] List<int> input)
     {
+        client = new FireSharp.FirebaseClient(config);
+
         using (var activity = MonitorService.ActivitySource.StartActivity())
         {
             MonitorService.Log.Here().Verbose("Entered Sub method with {Input}", input);
@@ -28,6 +42,19 @@ public class SubController : ControllerBase
                 result -= input[i];
             }
             MonitorService.Log.Here().Debug("Sub method calculated this result: {Result}", result);
+
+            //DB
+            if (client != null && !string.IsNullOrEmpty(basePath) && !string.IsNullOrEmpty(authSecret))
+            {
+                var data = new
+                {
+                    ListOfNumbers = input,
+                    Operation = "Sub",
+                    Result = result
+                };
+                var response = client.Push("doc/", data);
+
+            }
             return result;
         }
        

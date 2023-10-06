@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Polly;
@@ -21,7 +22,6 @@ public class CalculatorController : Controller
     [HttpGet]
     public IActionResult Index()
     {
-    
         return View();
     }
 
