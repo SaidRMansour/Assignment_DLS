@@ -18,13 +18,84 @@
 @if (ViewBag.Result != null)
 {
     <p>Result: @ViewBag.Result</p>
+    <p style="color: red;">Result added to DB</p>
 }
-<br /><br />
+<br />
+<br />
+
 
 @if (ViewBag.ResultData != null)
 {
-    <h3>Result Data:</h3>
-    <textarea rows="4" cols="50">
-       @ViewBag.ResultData
-    </textarea>
+    <h3>History data "ADD"-operation:</h3>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+    <table>
+        <thead>
+            <tr>
+                <th>List of numbers</th>
+                <th>Operation</th>
+                <th>Result</th>
+                <th>Time</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var record in ViewBag.ResultData)
+            {
+                if (record.Value.Operation == "Add")
+                {
+                    <tr>
+                        <td>@string.Join(", ", record.Value.ListOfNumbers)</td>
+                        <td>+</td>
+                        <td>@record.Value.Result</td>
+                        <td>@record.Value.Time</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    <br />
+    <br />
+    <h3>History data "Sub"-operation:</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>List of numbers</th>
+                <th>Operation</th>
+                <th>Result</th>
+                <th>Time</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var record in ViewBag.ResultData)
+            {
+                if (record.Value.Operation == "Sub")
+                {
+                    <tr>
+                        <td>@string.Join(", ", record.Value.ListOfNumbers)</td>
+                        <td>-</td>
+                        <td>@record.Value.Result</td>
+                        <td>@record.Value.Time</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
 }

@@ -48,9 +48,11 @@ public class SubController : ControllerBase
             {
                 var data = new
                 {
+                    Id = $"ListOfNumbers={string.Join(",", input)}&Operation=Sub&Result={result}",
                     ListOfNumbers = input,
                     Operation = "Sub",
-                    Result = result
+                    Result = result,
+                    Time = DateTime.Now
                 };
                 var response = client.Push("doc/", data);
 

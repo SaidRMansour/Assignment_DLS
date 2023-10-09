@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Net;
+using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +9,7 @@ using Polly;
 using Polly.Retry;
 using RestSharp;
 using Serilog;
+using SharedModels.Models;
 using UI.Models;
 
 namespace UI.Controllers;
@@ -20,8 +23,9 @@ public class CalculatorController : Controller
         _clientFactory = clientFactory;
     }
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> IndexAsync()
     {
+        await LoadDataAsync();
         return View();
     }
 
@@ -60,7 +64,17 @@ public class CalculatorController : Controller
         }
 
         ViewBag.Result = result;
+        await LoadDataAsync();
         return View("Index");
     }
-    
+
+    private async Task LoadDataAsync()
+    {
+        var client = _clientFactory.CreateClient("MyClient");
+        var result = await client.GetStringAsync($"http://history-service/History");
+
+        var records = JsonConvert.DeserializeObject<Dictionary<string, CalculationData>>(result);
+        ViewBag.ResultData = records;
+    }
+
 }
