@@ -24,6 +24,7 @@ public class MonitorService
              {
                  o.Endpoint = new Uri("http://zipkin:9411/api/v2/spans");
              })
+            .SetSampler(new AlwaysOnSampler())
             .AddSource(ActivitySource.Name)
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(ServiceName))
             .Build();
