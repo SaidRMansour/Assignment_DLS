@@ -42,13 +42,11 @@ public class HistoryController : ControllerBase
     public IActionResult DatabasePush([FromBody] CalculationData data)
     {
         client = new FireSharp.FirebaseClient(config);
-
         MonitorService.Log.Here().Debug("Entered DatabasePush with {Data}", data);
 
         if (client != null && !string.IsNullOrEmpty(basePath) && !string.IsNullOrEmpty(authSecret))
         {
             MonitorService.Log.Here().Debug("{Client} exisiting", client);
-
 
             var newData = new
             {
@@ -75,15 +73,9 @@ public class HistoryController : ControllerBase
                     MonitorService.Log.Here().Error("Error pushing to Firebase: {Message}", ex.Message);
                     return BadRequest(ex.Message);
                 }
-
             }
-
         }
-
         return Ok();
-
-
     }
-
 }
 

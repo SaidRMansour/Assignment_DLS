@@ -18,7 +18,7 @@
 @if (ViewBag.Result != null)
 {
     <p>Result: @ViewBag.Result</p>
-    if (ViewBag.ResultComment == "Data successfully added to the database.") //Added to DB
+    if (ViewBag.ResultComment == "Data successfully added to the database." || ViewBag.ResultComment == "Data fetched from DB.") //Added to DB
     {
         <p style="color: green;">@ViewBag.ResultComment</p>
     }

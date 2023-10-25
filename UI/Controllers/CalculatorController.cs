@@ -55,17 +55,33 @@ public class CalculatorController : Controller
             // Testing an empty List (For logging)
             // var temp = new List<int>();
             result = await client.GetStringAsync($"http://adding-service/Add?{queryString}");
-            if (result != null)
+            if (result != null || result != "")
             {
-                resp = await PushIntoDatabase(numbers, operation, result);
+                var (isFound, data) = await CheckDB(numbers, operation, result);
+                if (isFound)
+                {
+                    resp = "Data fetched from DB.";
+                }
+                else
+                {
+                    resp = await PushIntoDatabase(numbers, operation, result);
+                }
             }
         }
         else if (operation == "Sub")
         {
             result = await client.GetStringAsync($"http://subing-service/Sub?{queryString}");
-            if (result != null)
+            if (result != null || result != "")
             {
-                resp = await PushIntoDatabase(numbers, operation, result);
+                var (isFound, data) = await CheckDB(numbers, operation, result);
+                if (isFound)
+                {
+                    resp = "Data fetched from DB.";
+                }
+                else
+                {
+                    resp = await PushIntoDatabase(numbers, operation, result);
+                }
             }
         }
         else
@@ -127,6 +143,41 @@ public class CalculatorController : Controller
         {
             return "Failed to insert data into the database.";
         }
-
     }
+
+    private async Task<(bool, CalculationData)> CheckDB(List<int> input, string operation, string result)
+    {
+        var client = _clientFactory.CreateClient("MyClient");
+        var id = $"ListOfNumbers={string.Join(",", input)}&Operation={operation}&Result={result}";
+        var response = await client.GetStringAsync($"http://history-service/History");
+
+        // Deserialize object to Dict<string,string>
+        var rawRecords = JsonConvert.DeserializeObject<Dictionary<string, string>>(response);
+
+        // Deserialize object to Dict<string,CalculationData>
+        var records = new Dictionary<string, CalculationData>();
+
+        // Iterate through keys in 'rawRecords', deserialize the JSON value to 'CalculationData', and add to 'records' dictionary.
+        if (rawRecords != null)
+        {
+            foreach (var key in rawRecords.Keys)
+            {
+                var record = JsonConvert.DeserializeObject<CalculationData>(rawRecords[key]);
+                records.Add(key, record);
+            }
+        }
+
+        // Search through records for a matching Id
+        foreach (var entry in records.Values)
+        {
+            if (entry.Id == id)
+            {
+                return (true, entry); // Found a match!
+            }
+        }
+
+        return (false, null); // No match found
+    }
+
+
 }
