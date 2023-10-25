@@ -42,21 +42,6 @@ public class SubController : ControllerBase
                 result -= input[i];
             }
             MonitorService.Log.Here().Debug("Sub method calculated this result: {Result}", result);
-
-            //DB
-            if (client != null && !string.IsNullOrEmpty(basePath) && !string.IsNullOrEmpty(authSecret))
-            {
-                var data = new
-                {
-                    Id = $"ListOfNumbers={string.Join(",", input)}&Operation=Sub&Result={result}",
-                    ListOfNumbers = input,
-                    Operation = "Sub",
-                    Result = result,
-                    Time = DateTime.Now
-                };
-                var response = client.Push("doc/", data);
-
-            }
             return result;
         }
        

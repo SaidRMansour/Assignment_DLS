@@ -7,7 +7,7 @@
 <form method="post" action="@Url.Action("Calculate")">
     <input type="text" name="numberInput" placeholder="Enter numbers, e.g., 1,2,3" />
     <input type="submit" name="operation" value="Add" />
-    <input type="submit" name="operation" value="Subtract" />
+    <input type="submit" name="operation" value="Sub" />
 </form>
 
 @if (ViewBag.Error != null)
@@ -18,7 +18,15 @@
 @if (ViewBag.Result != null)
 {
     <p>Result: @ViewBag.Result</p>
-    <p style="color: red;">Result added to DB</p>
+    if (ViewBag.ResultComment == "Data successfully added to the database.") //Added to DB
+    {
+        <p style="color: green;">@ViewBag.ResultComment</p>
+    }
+    else // Failed to insert data into DB
+    {
+        <p style="color: red;">@ViewBag.ResultComment</p>
+
+    }
 }
 <br />
 <br />

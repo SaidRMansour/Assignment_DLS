@@ -1,4 +1,7 @@
-﻿using FireSharp.Config;
+﻿using System;
+using System.Reflection;
+using System.Text.Json;
+using FireSharp.Config;
 using FireSharp.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Monitoring;
@@ -34,8 +37,53 @@ public class HistoryController : ControllerBase
         var resp = dbResponse.Body;
         return resp;
     }
-  
 
+    [HttpPost("DatabasePush")]
+    public IActionResult DatabasePush([FromBody] CalculationData data)
+    {
+        client = new FireSharp.FirebaseClient(config);
+
+        MonitorService.Log.Here().Debug("Entered DatabasePush with {Data}", data);
+
+        if (client != null && !string.IsNullOrEmpty(basePath) && !string.IsNullOrEmpty(authSecret))
+        {
+            MonitorService.Log.Here().Debug("{Client} exisiting", client);
+
+
+            var newData = new
+            {
+                Id = data.Id.ToString(),
+                ListOfNumbers = data.ListOfNumbers,
+                Operation = data.Operation.ToString(),
+                Result = data.Result,
+                Time = data.Time
+            };
+           
+            if(data != null)
+            {
+                MonitorService.Log.Here().Debug("{Data} data is not null: ", data);
+                try
+                {
+                    string jsonString = JsonSerializer.Serialize(newData);
+                    MonitorService.Log.Here().Debug("{JSON} data is not null: ", jsonString);
+
+                    var resp = client.Push("doc/", jsonString);
+
+                }
+                catch (Exception ex)
+                {
+                    MonitorService.Log.Here().Error("Error pushing to Firebase: {Message}", ex.Message);
+                    return BadRequest(ex.Message);
+                }
+
+            }
+
+        }
+
+        return Ok();
+
+
+    }
 
 }
 
