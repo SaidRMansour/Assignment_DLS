@@ -6,7 +6,10 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Monitoring;
 using Newtonsoft.Json;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
 using Polly;
 using Polly.Retry;
 using RestSharp;
@@ -55,6 +58,7 @@ public class CalculatorController : Controller
             // Testing an empty List (For logging)
             // var temp = new List<int>();
             result = await client.GetStringAsync($"http://adding-service/Add?{queryString}");
+          
             if (result != null || result != "")
             {
                 var (isFound, data) = await CheckDB(numbers, operation, result);
