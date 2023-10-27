@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HistoryService", "HistorySe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedModels", "DTO\SharedModels.csproj", "{7A0A0E5C-3E81-4469-A3A9-B77D6886256D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpers", "Helpers\Helpers.csproj", "{D6A1EEA7-1F7F-4814-9CFC-0E46CAF0A8E9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{7A0A0E5C-3E81-4469-A3A9-B77D6886256D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A0A0E5C-3E81-4469-A3A9-B77D6886256D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A0A0E5C-3E81-4469-A3A9-B77D6886256D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6A1EEA7-1F7F-4814-9CFC-0E46CAF0A8E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6A1EEA7-1F7F-4814-9CFC-0E46CAF0A8E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6A1EEA7-1F7F-4814-9CFC-0E46CAF0A8E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6A1EEA7-1F7F-4814-9CFC-0E46CAF0A8E9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
