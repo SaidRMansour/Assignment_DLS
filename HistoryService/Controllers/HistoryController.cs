@@ -6,6 +6,9 @@ using FireSharp.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Monitoring;
 using SharedModels.Models;
+using System.Diagnostics;
+using OpenTelemetry.Context.Propagation;
+using OpenTelemetry;
 
 namespace HistoryService.Controllers;
 
@@ -26,56 +29,80 @@ public class HistoryController : ControllerBase
     [HttpGet]
     public string GetAll()
     {
-        client = new FireSharp.FirebaseClient(config);
+        var propagator = new TraceContextPropagator();
+        var contextToInject = HttpContext.Request.Headers;
 
-        var dbResponse = client.Get("doc/");
-        if (dbResponse.Body == "null")
+        var parentContext = propagator.Extract(default, contextToInject, (r, key) =>
         {
-            NotFound("No data found in the database");
-        }
+            return new List<string>(new[] { r.ContainsKey(key) ? r[key].ToString() : String.Empty });
+        });
+        Baggage.Current = parentContext.Baggage;
 
-        var resp = dbResponse.Body;
-        return resp;
+        using (var activity = MonitorService.ActivitySource.StartActivity("History service GETALL recieved", ActivityKind.Consumer, parentContext.ActivityContext))
+        { 
+            client = new FireSharp.FirebaseClient(config);
+
+            var dbResponse = client.Get("doc/");
+            if (dbResponse.Body == "null")
+            {
+                NotFound("No data found in the database");
+            }
+
+            var resp = dbResponse.Body;
+            return resp;
+        }
     }
 
     [HttpPost("DatabasePush")]
     public IActionResult DatabasePush([FromBody] CalculationData data)
     {
-        client = new FireSharp.FirebaseClient(config);
-        MonitorService.Log.Here().Debug("Entered DatabasePush with {Data}", data);
+        var propagator = new TraceContextPropagator();
+        var contextToInject = HttpContext.Request.Headers;
 
-        if (client != null && !string.IsNullOrEmpty(basePath) && !string.IsNullOrEmpty(authSecret))
+        var parentContext = propagator.Extract(default, contextToInject, (r, key) =>
         {
-            MonitorService.Log.Here().Debug("{Client} exisiting", client);
+            return new List<string>(new[] { r.ContainsKey(key) ? r[key].ToString() : String.Empty });
+        });
+        Baggage.Current = parentContext.Baggage;
 
-            var newData = new
+        using (var activity = MonitorService.ActivitySource.StartActivity("History service GETALL recieved", ActivityKind.Consumer, parentContext.ActivityContext))
+        {
+            client = new FireSharp.FirebaseClient(config);
+            MonitorService.Log.Here().Debug("Entered DatabasePush with {Data}", data);
+
+            if (client != null && !string.IsNullOrEmpty(basePath) && !string.IsNullOrEmpty(authSecret))
             {
-                Id = data.Id.ToString(),
-                ListOfNumbers = data.ListOfNumbers,
-                Operation = data.Operation.ToString(),
-                Result = data.Result,
-                Time = data.Time
-            };
-           
-            if(data != null)
-            {
-                MonitorService.Log.Here().Debug("{Data} data is not null: ", data);
-                try
-                {
-                    string jsonString = JsonSerializer.Serialize(newData);
-                    MonitorService.Log.Here().Debug("{JSON} data is not null: ", jsonString);
+                MonitorService.Log.Here().Debug("{Client} exisiting", client);
 
-                    var resp = client.Push("doc/", jsonString);
-
-                }
-                catch (Exception ex)
+                var newData = new
                 {
-                    MonitorService.Log.Here().Error("Error pushing to Firebase: {Message}", ex.Message);
-                    return BadRequest(ex.Message);
+                    Id = data.Id.ToString(),
+                    ListOfNumbers = data.ListOfNumbers,
+                    Operation = data.Operation.ToString(),
+                    Result = data.Result,
+                    Time = data.Time
+                };
+
+                if (data != null)
+                {
+                    MonitorService.Log.Here().Debug("{Data} data is not null: ", data);
+                    try
+                    {
+                        string jsonString = JsonSerializer.Serialize(newData);
+                        MonitorService.Log.Here().Debug("{JSON} data is not null: ", jsonString);
+
+                        var resp = client.Push("doc/", jsonString);
+
+                    }
+                    catch (Exception ex)
+                    {
+                        MonitorService.Log.Here().Error("Error pushing to Firebase: {Message}", ex.Message);
+                        return BadRequest(ex.Message);
+                    }
                 }
             }
-        }
-        return Ok();
+            return Ok();
+        } 
     }
 }
 

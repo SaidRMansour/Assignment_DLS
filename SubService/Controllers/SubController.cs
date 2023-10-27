@@ -1,7 +1,10 @@
-﻿using FireSharp.Config;
+﻿using System.Diagnostics;
+using FireSharp.Config;
 using FireSharp.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Monitoring;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
 
 namespace SubService.Controllers;
 
@@ -13,8 +16,15 @@ public class SubController : ControllerBase
     [HttpGet]
     public int Get([FromQuery] List<int> input)
     {
+        var propagator = new TraceContextPropagator();
+        var contextToInject = HttpContext.Request.Headers;
+        var parentContext = propagator.Extract(default, contextToInject, (r, key) =>
+        {
+            return new List<string>(new[] { r.ContainsKey(key) ? r[key].ToString() : String.Empty });
+        });
+        Baggage.Current = parentContext.Baggage;
 
-        using (var activity = MonitorService.ActivitySource.StartActivity())
+        using (var activity = MonitorService.ActivitySource.StartActivity("Get Sub service recieved", ActivityKind.Consumer, parentContext.ActivityContext))
         {
             MonitorService.Log.Here().Verbose("Entered Sub method with {Input}", input);
 

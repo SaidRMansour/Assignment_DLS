@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Data;
+using System.Diagnostics;
 using System.Text;
 using Dapper;
 using FireSharp.Config;
@@ -9,6 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 using Monitoring;
 using MySqlConnector;
 using Newtonsoft.Json;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
 using SharedModels.Models;
 
 namespace AddService.Controllers;
@@ -21,7 +24,15 @@ public class AddController : ControllerBase
     [HttpGet]
     public async Task<int> Get([FromQuery] List<int> input)
     {
-        using (var activity = MonitorService.ActivitySource.StartActivity())
+        var propagator = new TraceContextPropagator();
+        var contextToInject = HttpContext.Request.Headers;
+        var parentContext = propagator.Extract(default, contextToInject, (r, key) =>
+        {
+            return new List<string>(new[] { r.ContainsKey(key) ? r[key].ToString() : String.Empty });
+        });
+        Baggage.Current = parentContext.Baggage;
+
+        using (var activity = MonitorService.ActivitySource.StartActivity("Get Add service recieved", ActivityKind.Consumer, parentContext.ActivityContext))
         {
             MonitorService.Log.Here().Debug("Entered Add method with {Input}", input);
             if (input == null || !input.Any())
