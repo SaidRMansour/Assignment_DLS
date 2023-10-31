@@ -1,15 +1,29 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Monitoring;
 using OpenTelemetry;
 using OpenTelemetry.Context.Propagation;
+using SharedModels.Models;
+using Newtonsoft.Json;
+
 
 namespace AddService.Controllers
 {
+
     [ApiController]
     [Route("[controller]")]
     public class AddController : ControllerBase
     {
+
+        private readonly IHttpClientFactory _clientFactory;
+
+        // Constructor to initialize the HTTP client factory
+        public AddController(IHttpClientFactory clientFactory)
+        {
+            _clientFactory = clientFactory;
+        }
+
         /// <summary>
         /// Endpoint to calculate the sum of numbers.
         /// </summary>
@@ -48,5 +62,38 @@ namespace AddService.Controllers
                 return Ok(result);
             }
         }
+
+        // Push calculation result into database
+        [HttpPost]
+        public async Task<string> PushIntoDatabase([FromBody] CalculationData data)
+        {
+            var client = _clientFactory.CreateClient("MyClient");
+            var newData = new CalculationData()
+            {
+                Id = data.Id.ToString(),
+                ListOfNumbers = data.ListOfNumbers,
+                Operation = data.Operation.ToString(),
+                Result = data.Result,
+                Time = data.Time
+            };
+
+            var propagator = new TraceContextPropagator();
+            var activityContext = Activity.Current?.Context ?? default;
+            var propagationContext = new PropagationContext(activityContext, Baggage.Current);
+
+            var jsonContent = JsonConvert.SerializeObject(newData);
+            var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+            var request = new HttpRequestMessage(HttpMethod.Post, "http://history-service/History/DatabasePush")
+            {
+                Content = httpContent
+            };
+            propagator.Inject(propagationContext, request.Headers, (headers, key, value) => headers.Add(key, value));
+
+            var response = await client.SendAsync(request);
+
+            return response.IsSuccessStatusCode ? "Data successfully added to the database." : "Failed to insert data into the database.";
+        }
+
     }
 }

@@ -4,6 +4,9 @@
 
 builder.Services.AddControllers();
 
+// Add HttpClient with Polly retry policy
+builder.Services.AddHttpClient("MyClient");
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

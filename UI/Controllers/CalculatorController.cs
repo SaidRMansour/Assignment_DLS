@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net.Http;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Monitoring;
@@ -26,6 +27,7 @@ namespace UI.Controllers
         {
             await LoadDataAsync();
             return View();
+
         }
 
         // POST method to calculate based on user input and operation
@@ -68,7 +70,28 @@ namespace UI.Controllers
                     if (result != null || result != "")
                     {
                         var (isFound, data) = await CheckDB(numbers, operation, result);
-                        resp = isFound ? "Data fetched from DB." : await PushIntoDatabase(numbers, operation, result);
+
+                        // Data
+                        var newData = new CalculationData()
+                        {
+                            Id = $"ListOfNumbers={string.Join(",", numbers)}&Operation={operation}&Result={result}",
+                            ListOfNumbers = numbers,
+                            Operation = operation,
+                            Result = Int32.Parse(result),
+                            Time = DateTime.Now
+                        };
+                        var jsonContent = JsonConvert.SerializeObject(newData);
+                        var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                        var requestPush = new HttpRequestMessage(HttpMethod.Post, "http://adding-service/Add")
+                        {
+                            Content = httpContent
+                        };
+
+                        var responsePush = await client.SendAsync(requestPush);
+                        var responseContent = await responsePush.Content.ReadAsStringAsync();
+
+                        resp = isFound ? "Data fetched from DB." : responseContent;
                     }
                 }
                 else if (operation == "Sub")
@@ -82,7 +105,28 @@ namespace UI.Controllers
                     if (result != null || result != "")
                     {
                         var (isFound, data) = await CheckDB(numbers, operation, result);
-                        resp = isFound ? "Data fetched from DB." : await PushIntoDatabase(numbers, operation, result);
+
+                        // Data
+                        var newData = new CalculationData()
+                        {
+                            Id = $"ListOfNumbers={string.Join(",", numbers)}&Operation={operation}&Result={result}",
+                            ListOfNumbers = numbers,
+                            Operation = operation,
+                            Result = Int32.Parse(result),
+                            Time = DateTime.Now
+                        };
+                        var jsonContent = JsonConvert.SerializeObject(newData);
+                        var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                        var requestPush = new HttpRequestMessage(HttpMethod.Post, "http://subing-service/Sub")
+                        {
+                            Content = httpContent
+                        };
+
+                        var responsePush = await client.SendAsync(requestPush);
+                        var responseContent = await responsePush.Content.ReadAsStringAsync();
+
+                        resp = isFound ? "Data fetched from DB." : responseContent;
                     }
                 }
                 else
@@ -103,61 +147,33 @@ namespace UI.Controllers
         // Load historical calculation data
         private async Task LoadDataAsync()
         {
-            var client = _clientFactory.CreateClient("MyClient");
-
-            var propagator = new TraceContextPropagator();
-            var activityContext = Activity.Current?.Context ?? default;
-            var propagationContext = new PropagationContext(activityContext, Baggage.Current);
-
-            var request = new HttpRequestMessage(HttpMethod.Get, $"http://history-service/History");
-            propagator.Inject(propagationContext, request.Headers, (headers, key, value) => headers.Add(key, value));
-
-            var response = await client.SendAsync(request);
-            var result = await response.Content.ReadAsStringAsync();
-
-            var rawRecords = JsonConvert.DeserializeObject<Dictionary<string, string>>(result);
-            var records = new Dictionary<string, CalculationData>();
-
-            if (rawRecords != null)
+            using (var activity = MonitorService.ActivitySource.StartActivity())
             {
-                foreach (var key in rawRecords.Keys)
+                var client = _clientFactory.CreateClient("MyClient");
+
+                var propagator = new TraceContextPropagator();
+                var activityContext = activity?.Context ?? Activity.Current?.Context ?? default;
+                var propagationContext = new PropagationContext(activityContext, Baggage.Current);
+
+                var request = new HttpRequestMessage(HttpMethod.Get, $"http://history-service/History");
+                propagator.Inject(propagationContext, request.Headers, (headers, key, value) => headers.Add(key, value));
+
+                var response = await client.SendAsync(request);
+                var result = await response.Content.ReadAsStringAsync();
+
+                var rawRecords = JsonConvert.DeserializeObject<Dictionary<string, string>>(result);
+                var records = new Dictionary<string, CalculationData>();
+
+                if (rawRecords != null)
                 {
-                    var record = JsonConvert.DeserializeObject<CalculationData>(rawRecords[key]);
-                    records.Add(key, record);
+                    foreach (var key in rawRecords.Keys)
+                    {
+                        var record = JsonConvert.DeserializeObject<CalculationData>(rawRecords[key]);
+                        records.Add(key, record);
+                    }
+                    ViewBag.ResultData = records;
                 }
-                ViewBag.ResultData = records;
             }
-        }
-
-        // Push calculation result into database
-        private async Task<string> PushIntoDatabase(List<int> input, string operation, string result)
-        {
-            var client = _clientFactory.CreateClient("MyClient");
-            var data = new CalculationData()
-            {
-                Id = $"ListOfNumbers={string.Join(",", input)}&Operation={operation}&Result={result}",
-                ListOfNumbers = input,
-                Operation = operation,
-                Result = Int32.Parse(result),
-                Time = DateTime.Now
-            };
-
-            var propagator = new TraceContextPropagator();
-            var activityContext = Activity.Current?.Context ?? default;
-            var propagationContext = new PropagationContext(activityContext, Baggage.Current);
-
-            var jsonContent = JsonConvert.SerializeObject(data);
-            var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-            var request = new HttpRequestMessage(HttpMethod.Post, "http://history-service/History/DatabasePush")
-            {
-                Content = httpContent
-            };
-            propagator.Inject(propagationContext, request.Headers, (headers, key, value) => headers.Add(key, value));
-
-            var response = await client.SendAsync(request);
-
-            return response.IsSuccessStatusCode ? "Data successfully added to the database." : "Failed to insert data into the database.";
         }
 
         // Check if the result already exists in the database
