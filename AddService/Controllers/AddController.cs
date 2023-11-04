@@ -6,7 +6,7 @@ using OpenTelemetry;
 using OpenTelemetry.Context.Propagation;
 using SharedModels.Models;
 using Newtonsoft.Json;
-
+using Helpers;
 
 namespace AddService.Controllers
 {
@@ -17,11 +17,13 @@ namespace AddService.Controllers
     {
 
         private readonly IHttpClientFactory _clientFactory;
+        private readonly RabbitMqService _rabbitMqService;
 
         // Constructor to initialize the HTTP client factory
-        public AddController(IHttpClientFactory clientFactory)
+        public AddController(IHttpClientFactory clientFactory, RabbitMqService rabbitMqService)
         {
             _clientFactory = clientFactory;
+            _rabbitMqService = rabbitMqService; 
         }
 
         /// <summary>
@@ -57,6 +59,7 @@ namespace AddService.Controllers
                 Console.WriteLine(Environment.MachineName);
 
                 var result = input.Sum();
+
                 MonitorService.Log.Here().Debug("Add method calculated this result: {Result}", result);
 
                 return Ok(result);
@@ -92,6 +95,7 @@ namespace AddService.Controllers
 
             var response = await client.SendAsync(request);
 
+          
             return response.IsSuccessStatusCode ? "Data successfully added to the database." : "Failed to insert data into the database.";
         }
 

@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using OpenTelemetry;
 using OpenTelemetry.Context.Propagation;
 using SharedModels.Models;
+using Helpers;
 
 namespace UI.Controllers
 {
@@ -14,11 +15,13 @@ namespace UI.Controllers
     public class CalculatorController : Controller
     {
         private readonly IHttpClientFactory _clientFactory;
+        private readonly RabbitMqService _rabbitMqService;
 
         // Constructor to initialize the HTTP client factory
-        public CalculatorController(IHttpClientFactory clientFactory)
+        public CalculatorController(IHttpClientFactory clientFactory, RabbitMqService rabbitMqService)
         {
             _clientFactory = clientFactory;
+            _rabbitMqService = rabbitMqService;
         }
 
         // GET method for loading the Index view
@@ -36,6 +39,12 @@ namespace UI.Controllers
         {
             using (var activity = MonitorService.ActivitySource.StartActivity())
             {
+                if(numberInput == null || numberInput == "")
+                {
+                    ViewBag.Error = "No numbers inserted";
+                    await LoadDataAsync();
+                    return View("Index");
+                }
                 List<int> numbers;
                 try
                 {
@@ -45,9 +54,10 @@ namespace UI.Controllers
                 catch (FormatException)
                 {
                     ViewBag.Error = "Invalid number format.";
+                    await LoadDataAsync();
                     return View("Index");
                 }
-
+                
                 var client = _clientFactory.CreateClient("MyClient");
                 // Initialize tracing context
                 var activityContext = activity?.Context ?? Activity.Current?.Context ?? default;
@@ -57,6 +67,7 @@ namespace UI.Controllers
                 var queryString = string.Join("&input=", numbers.Prepend(0));
                 string result = "";
                 string resp = "";
+                string responseContent = string.Empty;
 
                 // Calculate based on selected operation
                 if (operation == "Add")
@@ -71,25 +82,29 @@ namespace UI.Controllers
                     {
                         var (isFound, data) = await CheckDB(numbers, operation, result);
 
-                        // Data
-                        var newData = new CalculationData()
+                        if (!isFound)
                         {
-                            Id = $"ListOfNumbers={string.Join(",", numbers)}&Operation={operation}&Result={result}",
-                            ListOfNumbers = numbers,
-                            Operation = operation,
-                            Result = Int32.Parse(result),
-                            Time = DateTime.Now
-                        };
-                        var jsonContent = JsonConvert.SerializeObject(newData);
-                        var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                            // Data
+                            var newData = new CalculationData()
+                            {
+                                Id = $"ListOfNumbers={string.Join(",", numbers)}&Operation={operation}&Result={result}",
+                                ListOfNumbers = numbers,
+                                Operation = operation,
+                                Result = Int32.Parse(result),
+                                Time = DateTime.Now
+                            };
+                            var jsonContent = JsonConvert.SerializeObject(newData);
+                            var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                        var requestPush = new HttpRequestMessage(HttpMethod.Post, "http://adding-service/Add")
-                        {
-                            Content = httpContent
-                        };
+                            var requestPush = new HttpRequestMessage(HttpMethod.Post, "http://adding-service/Add")
+                            {
+                                Content = httpContent
+                            };
 
-                        var responsePush = await client.SendAsync(requestPush);
-                        var responseContent = await responsePush.Content.ReadAsStringAsync();
+                            var responsePush = await client.SendAsync(requestPush);
+                            responseContent = await responsePush.Content.ReadAsStringAsync();
+
+                        }
 
                         resp = isFound ? "Data fetched from DB." : responseContent;
                     }
@@ -106,25 +121,29 @@ namespace UI.Controllers
                     {
                         var (isFound, data) = await CheckDB(numbers, operation, result);
 
-                        // Data
-                        var newData = new CalculationData()
+                        if (!isFound)
                         {
-                            Id = $"ListOfNumbers={string.Join(",", numbers)}&Operation={operation}&Result={result}",
-                            ListOfNumbers = numbers,
-                            Operation = operation,
-                            Result = Int32.Parse(result),
-                            Time = DateTime.Now
-                        };
-                        var jsonContent = JsonConvert.SerializeObject(newData);
-                        var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                            // Data
+                            var newData = new CalculationData()
+                            {
+                                Id = $"ListOfNumbers={string.Join(",", numbers)}&Operation={operation}&Result={result}",
+                                ListOfNumbers = numbers,
+                                Operation = operation,
+                                Result = Int32.Parse(result),
+                                Time = DateTime.Now
+                            };
+                            var jsonContent = JsonConvert.SerializeObject(newData);
+                            var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                        var requestPush = new HttpRequestMessage(HttpMethod.Post, "http://subing-service/Sub")
-                        {
-                            Content = httpContent
-                        };
+                            var requestPush = new HttpRequestMessage(HttpMethod.Post, "http://subing-service/Sub")
+                            {
+                                Content = httpContent
+                            };
 
-                        var responsePush = await client.SendAsync(requestPush);
-                        var responseContent = await responsePush.Content.ReadAsStringAsync();
+                            var responsePush = await client.SendAsync(requestPush);
+                            responseContent = await responsePush.Content.ReadAsStringAsync();
+
+                        }
 
                         resp = isFound ? "Data fetched from DB." : responseContent;
                     }

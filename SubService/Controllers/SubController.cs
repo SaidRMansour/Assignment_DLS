@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text;
+using Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Monitoring;
 using Newtonsoft.Json;
@@ -13,12 +14,15 @@ namespace SubService.Controllers
     [Route("[controller]")]
     public class SubController : ControllerBase
     {
+
         private readonly IHttpClientFactory _clientFactory;
+        private readonly RabbitMqService _rabbitMqService;
 
         // Constructor to initialize the HTTP client factory
-        public SubController(IHttpClientFactory clientFactory)
+        public SubController(IHttpClientFactory clientFactory, RabbitMqService rabbitMqService)
         {
             _clientFactory = clientFactory;
+            _rabbitMqService = rabbitMqService;
         }
 
         /// <summary>

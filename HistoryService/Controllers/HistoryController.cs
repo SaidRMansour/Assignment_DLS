@@ -7,6 +7,8 @@ using SharedModels.Models;
 using System.Diagnostics;
 using OpenTelemetry.Context.Propagation;
 using OpenTelemetry;
+using Helpers;
+
 
 namespace HistoryService.Controllers
 {
@@ -14,6 +16,9 @@ namespace HistoryService.Controllers
     [Route("[controller]")]
     public class HistoryController : ControllerBase
     {
+        // RabbitMQ/CloudMQ setup
+        private readonly RabbitMqService _rabbitMqService; // Declare the RabbitMqService
+
         // Firebase authentication secret
         private static readonly string authSecret = "6WQRS3cA7lh67gJ9uacEX5e3Hnf9Rd9aEQ1QjsYm";
         // Base path for the Firebase database

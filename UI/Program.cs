@@ -1,4 +1,5 @@
-﻿using Monitoring;
+﻿using Helpers;
+using Monitoring;
 using OpenTelemetry.Trace;
 using Polly;
 using Serilog;
@@ -10,6 +11,7 @@ try
 
 
     // Add services to the container.
+    builder.Services.AddSingleton<RabbitMqService>();
     builder.Services.AddControllersWithViews();
 
     // Add HttpClient with Polly retry policy
